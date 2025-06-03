@@ -5,6 +5,8 @@ import json
 from .models import Product, Order, OrderItem
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from django.core.exceptions import ValidationError
+from phonenumber_field.validators import validate_international_phonenumber
 
 
 def banners_list_api(request):
@@ -69,6 +71,21 @@ def register_order(request):
     try:
         if not data['products'] or not isinstance(data['products'], list):
             return Response({'err': 'it is mt or not list'})
+        fields = ['firstname', 'lastname', 'address', 'phonenumber']
+        for field in fields:
+            if not data[field]:
+                return Response({'Ifelse': 'pls fill out all'})
+        for index in range(4):
+            field = fields[index]
+            if not isinstance(data[field], str):
+                return Response({'NotStr': 'Go fill like str'})
+        try:
+            validate_international_phonenumber(data['phonenumber'])
+        except ValidationError:
+            return Response({'Phonenumber': 'Ur phone is not valid'})
+        
+            
+
         order = Order.objects.create(
             firstname = data['firstname'],
             lastname = data['lastname'],
@@ -77,7 +94,10 @@ def register_order(request):
             )
         print(order)  
         for item in data['products']:
-            product = Product.objects.get(id=item['product'])
+            try:
+                product = Product.objects.get(id=item['product'])
+            except:
+                return Response({'Product': 'Invalid id of product'})
             OrderItem.objects.create(order=order, product=product, quantity=item['quantity'])
         return Response({'ok': 'add'})
     except KeyError:
