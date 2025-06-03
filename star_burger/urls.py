@@ -18,6 +18,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 from django.shortcuts import render
+from foodcartapp.views import register_order
 
 from . import settings
 
@@ -25,7 +26,9 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', render, kwargs={'template_name': 'index.html'}, name='start_page'),
     path('api/', include('foodcartapp.urls')),
+    path('api/order/', register_order, name='register_order'),
     path('manager/', include('restaurateur.urls')),
+    path('api-auth/', include('rest_framework.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:

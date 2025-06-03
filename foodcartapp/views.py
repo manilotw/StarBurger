@@ -3,6 +3,8 @@ from django.templatetags.static import static
 import json
 
 from .models import Product, Order, OrderItem
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 
 
 def banners_list_api(request):
@@ -56,23 +58,27 @@ def product_list_api(request):
         'indent': 4,
     })
 
-
+@api_view(['POST'])
 def register_order(request):
     # TODO это лишь заглушка
 
     try:
-        data = json.loads(request.body.decode())
+        print('request.body:', request.data)
+        data = request.data
+        print('Получены данные:', data)
         order = Order.objects.create(
             firstname = data['firstname'],
             lastname = data['lastname'],
             phonenumber = data['phonenumber'],
             address = data['address']
             )
+        print(order)  
         for item in data['products']:
             product = Product.objects.get(id=item['product'])
             OrderItem.objects.create(order=order, product=product, quantity=item['quantity'])
-            
+        return Response({'ok': 'add'})
     except ValueError:
-        return JsonResponse({
+        return Response({
             'error': 'bla bla bla',
         })
+    
