@@ -62,10 +62,13 @@ def product_list_api(request):
 def register_order(request):
     # TODO это лишь заглушка
 
+
+    print('request.body:', request.data)
+    data = request.data
+    print('Получены данные:', data)
     try:
-        print('request.body:', request.data)
-        data = request.data
-        print('Получены данные:', data)
+        if not data['products'] or not isinstance(data['products'], list):
+            return Response({'err': 'it is mt or not list'})
         order = Order.objects.create(
             firstname = data['firstname'],
             lastname = data['lastname'],
@@ -77,8 +80,7 @@ def register_order(request):
             product = Product.objects.get(id=item['product'])
             OrderItem.objects.create(order=order, product=product, quantity=item['quantity'])
         return Response({'ok': 'add'})
-    except ValueError:
-        return Response({
-            'error': 'bla bla bla',
-        })
+    except KeyError:
+        return Response({'Error': 'Br i think u no have product'})
+    
     
