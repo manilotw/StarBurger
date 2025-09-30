@@ -62,7 +62,6 @@ def product_list_api(request):
 
 @api_view(['POST'])
 def register_order(request):
-    # TODO это лишь заглушка
 
 
     print('request.body:', request.data)
