@@ -92,7 +92,7 @@ def register_order(request):
             phonenumber = data['phonenumber'],
             address = data['address']
             )
-          
+        print(order)  
         for item in data['products']:
             try:
                 product = Product.objects.get(id=item['product'])
