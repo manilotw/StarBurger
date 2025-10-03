@@ -5,8 +5,9 @@ import json
 from .models import Product, Order, OrderItem
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError as VE
 from phonenumber_field.validators import validate_international_phonenumber
+from rest_framework.serializers import Serializer, ModelSerializer, CharField, ValidationError, ListField
 
 
 def banners_list_api(request):
@@ -60,46 +61,90 @@ def product_list_api(request):
         'indent': 4,
     })
 
+class OrderItemSerializer(ModelSerializer):
+    class Meta:
+        model = OrderItem
+        fields = ['product', 'quantity']
+
+class OrderSerializer(ModelSerializer):
+    products = OrderItemSerializer(many=True, allow_empty=False)
+    class Meta:
+        model = Order
+        fields = ['products', 'firstname', 'lastname', 'phonenumber', 'address']
+    
+    def validate_phonenumber(self, value):
+        try:
+            validate_international_phonenumber(value)
+        except ValidationError:
+            raise ValidationError("Invalid phone number format")
+        return value
+    
+        
+print(repr(OrderSerializer()))
+    # def validate_products(self, value):
+    #     if not isinstance(value, list):
+    #         raise ValidationError("Products must be a non-empty list")
+    #     return value
+
+# def validate(data):
+
+    # serializer = OrderSerializer(data=data)
+
+    # serializer.is_valid(raise_exception=True)
+
+    # errors = []
+
+    # if not data['products'] or not isinstance(data['products'], list):
+    #     errors.append({'err': 'it is mt or not list'})
+    # else:
+    #     for item in data.get('products', []):
+    #         try:
+    #             Product.objects.get(id=item['product'])
+    #         except Product.DoesNotExist:
+    #             errors.append({'Product': f"Invalid id: {item.get('product')}"})
+
+    # fields = ['firstname', 'lastname', 'address', 'phonenumber']
+    # for field in fields:
+    #     if field not in data or not data[field]:
+    #         errors.append({'Ifelse': f'{field} is required'})
+    #     elif not isinstance(data[field], str):
+    #         errors.append({'NotStr': f'{field} must be str'})
+
+    # try:
+    #     validate_international_phonenumber(data.get('phonenumber', ''))
+    # except VE:
+    #     errors.append({'Phonenumber': 'Ur phone is not valid'})
+
+
+    # if errors:
+    #     raise ValidationError(errors)
+
+
 @api_view(['POST'])
 def register_order(request):
-
-
+    
+    # validate(request.data)
     print('request.body:', request.data)
-    data = request.data
-    print('Получены данные:', data)
-    try:
-        if not data['products'] or not isinstance(data['products'], list):
-            return Response({'err': 'it is mt or not list'})
-        fields = ['firstname', 'lastname', 'address', 'phonenumber']
-        for field in fields:
-            if not data[field]:
-                return Response({'Ifelse': 'pls fill out all'})
-        for index in range(4):
-            field = fields[index]
-            if not isinstance(data[field], str):
-                return Response({'NotStr': 'Go fill like str'})
-        try:
-            validate_international_phonenumber(data['phonenumber'])
-        except ValidationError:
-            return Response({'Phonenumber': 'Ur phone is not valid'})
-        
-            
+    
+    serializer = OrderSerializer(data=request.data)
 
-        order = Order.objects.create(
-            firstname = data['firstname'],
-            lastname = data['lastname'],
-            phonenumber = data['phonenumber'],
-            address = data['address']
-            )
-        print(order)  
-        for item in data['products']:
-            try:
-                product = Product.objects.get(id=item['product'])
-            except:
-                return Response({'Product': 'Invalid id of product'})
-            OrderItem.objects.create(order=order, product=product, quantity=item['quantity'])
-        return Response({'ok': 'add'})
-    except KeyError:
-        return Response({'Error': 'Br i think u no have product'})
+    serializer.is_valid(raise_exception=True)
+    data = Serializer.validated_data
+    print('Получены данные:', data)
+
+    order = Order.objects.create(
+        firstname=data['firstname'],
+        lastname=data['lastname'],
+        phonenumber=data['phonenumber'],
+        address=data['address'],
+    )
+
+    for item in data['products']:
+        product = Product.objects.get(id=item['product'])
+        OrderItem.objects.create(order=order, product=product, quantity=item['quantity'])
+
+    return Response({'ok': 'add'})
+
+
     
     
