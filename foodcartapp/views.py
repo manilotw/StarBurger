@@ -67,10 +67,11 @@ class OrderItemSerializer(ModelSerializer):
         fields = ['product', 'quantity']
 
 class OrderSerializer(ModelSerializer):
-    products = OrderItemSerializer(many=True, allow_empty=False)
+    products = OrderItemSerializer(many=True, allow_empty=False, write_only=True)
     class Meta:
         model = Order
         fields = ['products', 'firstname', 'lastname', 'phonenumber', 'address']
+        
     
     def validate_phonenumber(self, value):
         try:
@@ -129,7 +130,7 @@ def register_order(request):
     serializer = OrderSerializer(data=request.data)
 
     serializer.is_valid(raise_exception=True)
-    data = Serializer.validated_data
+    data = serializer.validated_data
     print('Получены данные:', data)
 
     order = Order.objects.create(
@@ -140,10 +141,11 @@ def register_order(request):
     )
 
     for item in data['products']:
-        product = Product.objects.get(id=item['product'])
+        product = item['product']
+        product = Product.objects.get(id=product.id)
         OrderItem.objects.create(order=order, product=product, quantity=item['quantity'])
 
-    return Response({'ok': 'add'})
+    return Response(OrderSerializer(order).data)
 
 
     
