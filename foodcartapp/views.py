@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from django.core.exceptions import ValidationError as VE
 from phonenumber_field.validators import validate_international_phonenumber
 from rest_framework.serializers import Serializer, ModelSerializer, CharField, ValidationError, ListField
-
+from django.db import transaction
 
 def banners_list_api(request):
     # FIXME move data to db?
@@ -120,7 +120,7 @@ print(repr(OrderSerializer()))
     # if errors:
     #     raise ValidationError(errors)
 
-
+@transaction.atomic
 @api_view(['POST'])
 def register_order(request):
     
