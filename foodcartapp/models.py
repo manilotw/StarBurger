@@ -159,6 +159,12 @@ class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField()
+    price = models.DecimalField(
+        'цена',
+        max_digits=8,
+        decimal_places=2,
+        validators=[MinValueValidator(0)]
+    )
 
     class Meta:
         verbose_name = 'позиция заказа'
