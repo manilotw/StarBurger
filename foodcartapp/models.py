@@ -123,6 +123,19 @@ class RestaurantMenuItem(models.Model):
         return f"{self.restaurant.name} - {self.product.name}"
 
 class Order(models.Model):
+    ORDER_STATUS = {
+        ('Done', 'Выполнен'),
+        ('In progress', 'В процессе'),  
+        ('In delivery', 'На доставке'),
+        ('Raw', 'Не обработан')
+    }
+    status = models.CharField(
+        'статус',
+        max_length=20,
+        choices=ORDER_STATUS,
+        default='Raw',
+        db_index=True
+    )
     products = models.ManyToManyField(
         Product,
         through='OrderItem'

@@ -96,5 +96,5 @@ def view_restaurants(request):
 def view_orders(request):
     orders = Order.objects.annotate(
         total_price=Sum(F('orderitem__product__price') * F('orderitem__quantity'))
-    )
+    ).filter(status__in=['Raw'])
     return render(request, 'order_items.html', {'order_items': orders})
