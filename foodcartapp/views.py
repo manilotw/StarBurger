@@ -81,57 +81,15 @@ class OrderSerializer(ModelSerializer):
         return value
     
         
-print(repr(OrderSerializer()))
-    # def validate_products(self, value):
-    #     if not isinstance(value, list):
-    #         raise ValidationError("Products must be a non-empty list")
-    #     return value
-
-# def validate(data):
-
-    # serializer = OrderSerializer(data=data)
-
-    # serializer.is_valid(raise_exception=True)
-
-    # errors = []
-
-    # if not data['products'] or not isinstance(data['products'], list):
-    #     errors.append({'err': 'it is mt or not list'})
-    # else:
-    #     for item in data.get('products', []):
-    #         try:
-    #             Product.objects.get(id=item['product'])
-    #         except Product.DoesNotExist:
-    #             errors.append({'Product': f"Invalid id: {item.get('product')}"})
-
-    # fields = ['firstname', 'lastname', 'address', 'phonenumber']
-    # for field in fields:
-    #     if field not in data or not data[field]:
-    #         errors.append({'Ifelse': f'{field} is required'})
-    #     elif not isinstance(data[field], str):
-    #         errors.append({'NotStr': f'{field} must be str'})
-
-    # try:
-    #     validate_international_phonenumber(data.get('phonenumber', ''))
-    # except VE:
-    #     errors.append({'Phonenumber': 'Ur phone is not valid'})
-
-
-    # if errors:
-    #     raise ValidationError(errors)
-
 @transaction.atomic
 @api_view(['POST'])
 def register_order(request):
-    
-    # validate(request.data)
-    print('request.body:', request.data)
     
     serializer = OrderSerializer(data=request.data)
 
     serializer.is_valid(raise_exception=True)
     data = serializer.validated_data
-    print('Получены данные:', data)
+  
 
     order = Order.objects.create(
         firstname=data['firstname'],
