@@ -130,6 +130,11 @@ class Order(models.Model):
         ('In delivery', 'На доставке'),
         ('Raw', 'Не обработан')
     }
+    PAY_METHODS = {
+        ('Cash', 'Наличными'),
+        ('Card', 'Картой'),
+        ('Online', 'Онлайн')
+    }
     status = models.CharField(
         'статус',
         max_length=20,
@@ -166,7 +171,14 @@ class Order(models.Model):
     called_at = models.DateTimeField(null=True, blank=True, verbose_name='Called at')
     delivered_at = models.DateTimeField(null=True, blank=True, verbose_name='Delivered at')
 
-
+    payment_method = models.CharField(
+        'Способ оплаты',
+        max_length=20,
+        choices=PAY_METHODS,
+        default='Cash',
+        db_index=True
+    )
+    
     comment = models.TextField(blank=True, verbose_name='Комментарий')
 
 
