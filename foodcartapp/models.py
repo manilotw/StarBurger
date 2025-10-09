@@ -160,6 +160,7 @@ class Order(models.Model):
         max_length=255,
         db_index=True
         )
+    comment = models.TextField(blank=True, verbose_name='Комментарий')
 
     class Meta():
         verbose_name = 'заказ'
