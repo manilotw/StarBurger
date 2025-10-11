@@ -10,7 +10,7 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth import views as auth_views
 
 
-from foodcartapp.models import Product, Restaurant, Order, OrderItem
+from foodcartapp.models import Product, Restaurant, Order, OrderItem, RestaurantMenuItem
 
 
 class Login(forms.Form):
@@ -95,6 +95,8 @@ def view_restaurants(request):
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_orders(request):
     orders = Order.objects.annotate(
-        total_price=Sum(F('orderitem__product__price') * F('orderitem__quantity'))
+        total_price=Sum(F('items__product__price') * F('items__quantity'))
     ).filter(status__in=['Raw'])
+    for order in orders:
+        order.restaurants = RestaurantMenuItem.available.get_restaurants_by_order(order.id)
     return render(request, 'order_items.html', {'order_items': orders})

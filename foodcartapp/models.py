@@ -93,8 +93,25 @@ class Product(models.Model):
     def __str__(self):
         return self.name
 
+class RestaurantMenuItemQuerySet(models.QuerySet):
+    def get_restaurants_by_order(self, order_id):
+        order = Order.objects.select_related('restaurant').get(pk=order_id)
+        if order.restaurant:
+            return {order.restaurant}
+
+        product_ids = order.items.all().values_list('product_id', flat=True)
+        restaurants = Restaurant.objects.filter(
+            menu_items__product_id__in=product_ids,
+            menu_items__availability=True
+        ).distinct()
+
+        restaurants = restaurants.filter(menu_items__product_id__in=product_ids)
+
+        return set(restaurants)
 
 class RestaurantMenuItem(models.Model):
+    available = RestaurantMenuItemQuerySet.as_manager()
+    objects = models.Manager()
     restaurant = models.ForeignKey(
         Restaurant,
         related_name='menu_items',
@@ -178,8 +195,16 @@ class Order(models.Model):
         default='Cash',
         db_index=True
     )
-    
+
     comment = models.TextField(blank=True, verbose_name='Комментарий')
+
+    restaurant = models.ForeignKey(
+    Restaurant,
+    related_name='orders',
+    verbose_name='ресторан',
+    on_delete=models.CASCADE,
+    null=True, blank=True
+    )
 
 
     class Meta():
@@ -190,8 +215,8 @@ class Order(models.Model):
         return self.address
     
 class OrderItem(models.Model):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, related_name='items', on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField()
     price = models.DecimalField(
         'цена',
