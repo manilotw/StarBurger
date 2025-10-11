@@ -42,7 +42,7 @@
             {% else %}
               <summary>Могут приготовить:</summary>
               {% for restaurant in item.restaurants %}
-                {{ restaurant.name }}<br>
+                {{ restaurant.name }} - {{ restaurant.distance }} км<br>
               {% endfor %}
             {% endif %}
           </details>

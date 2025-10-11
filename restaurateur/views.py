@@ -4,14 +4,38 @@ from django.views import View
 from django.urls import reverse_lazy
 from django.contrib.auth.decorators import user_passes_test
 from django.db.models import F, Sum
-
+from geopy import distance
 
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import views as auth_views
-
+from environs import Env
+import requests
 
 from foodcartapp.models import Product, Restaurant, Order, OrderItem, RestaurantMenuItem
 
+env = Env()
+env.read_env()
+api_key = env("YANDEX_GEOCODE_API_KEY")
+
+def fetch_coordinates(apikey, address):
+    try:
+        base_url = "https://geocode-maps.yandex.ru/1.x"
+        response = requests.get(base_url, params={
+            "geocode": address,
+            "apikey": apikey,
+            "format": "json",
+        })
+        response.raise_for_status()
+        found_places = response.json()['response']['GeoObjectCollection']['featureMember']
+
+        if not found_places:
+            return None
+
+        most_relevant = found_places[0]
+        lon, lat = most_relevant['GeoObject']['Point']['pos'].split(" ")
+        return lon, lat
+    except (requests.RequestException, KeyError, IndexError):
+        return None
 
 class Login(forms.Form):
     username = forms.CharField(
@@ -96,7 +120,14 @@ def view_restaurants(request):
 def view_orders(request):
     orders = Order.objects.annotate(
         total_price=Sum(F('items__product__price') * F('items__quantity'))
-    ).filter(status__in=['Raw'])
+    ).order_by('-status')
     for order in orders:
         order.restaurants = RestaurantMenuItem.available.get_restaurants_by_order(order.id)
+        for restaurant in order.restaurants:
+            restaurant_coords = fetch_coordinates(api_key, restaurant.address)
+            order_coords = fetch_coordinates(api_key, order.address)
+            if order_coords:
+                restaurant.distance = round(distance.distance(restaurant_coords[::-1], order_coords[::-1]).km, 2)
+            else:
+                restaurant.distance = "Ошибка определения координат"
     return render(request, 'order_items.html', {'order_items': orders})
