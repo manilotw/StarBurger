@@ -25,4 +25,4 @@ class Place(models.Model):
     )
 
     class Meta:
-        unique_together = ['address_place', 'lat', 'lon']
+        unique_together = ['address', 'lat', 'lon']
