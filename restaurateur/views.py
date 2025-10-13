@@ -132,4 +132,7 @@ def view_orders(request):
                 restaurant.distance = round(distance.distance(restaurant_coords[::-1], order_coords[::-1]).km, 2)
             else:
                 restaurant.distance = "Ошибка определения координат"
+                
+        order.restaurants = sorted(order.restaurants, key=lambda r: r.distance)
+
     return render(request, 'order_items.html', {'order_items': orders})

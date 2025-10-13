@@ -2,7 +2,7 @@ from django.utils import timezone
 from django.db import models
 
 class Place(models.Model):
-    address = models.CharField(
+    address_place = models.CharField(
         verbose_name='адрес',
         max_length=50,
         db_index=True
@@ -25,4 +25,4 @@ class Place(models.Model):
     )
 
     class Meta:
-        unique_together = ['address', 'lat', 'lon']
+        unique_together = ['address_place', 'lat', 'lon']
