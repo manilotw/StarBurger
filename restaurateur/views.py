@@ -13,10 +13,7 @@ from environs import Env
 import requests
 
 from foodcartapp.models import Product, Restaurant, Order, OrderItem, RestaurantMenuItem
-
-env = Env()
-env.read_env()
-api_key = env("YANDEX_GEOCODE_API_KEY")
+from star_burger.settings import api_key
 
 def fetch_coordinates(apikey, address):
     try:
