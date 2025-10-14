@@ -163,22 +163,18 @@ class Order(models.Model):
         through='OrderItem'
         )
     firstname = models.CharField(
-        null=False,
-        blank=True,
+        blank=False,
         max_length=50
         )
     lastname = models.CharField(
-        null=False,
-        blank=True,
+        blank=False,
         max_length=50
         )
     phonenumber = PhoneNumberField(
-        null=False,
-        blank=True,
+        blank=False,
         )
     address = models.CharField(
-        null=False,
-        blank=True,
+        blank=False,
         max_length=255,
         db_index=True
         )
