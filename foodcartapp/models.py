@@ -142,56 +142,73 @@ class RestaurantMenuItem(models.Model):
 class Order(models.Model):
     ORDER_STATUS = {
         ('Done', 'Выполнен'),
-        ('In progress', 'В процессе'),  
+        ('In progress', 'В процессе'),
         ('In delivery', 'На доставке'),
-        ('Raw', 'Не обработан')
+        ('Raw', 'Не обработан'),
     }
+
     PAY_METHODS = {
         ('Cash', 'Наличными'),
         ('Card', 'Картой'),
-        ('Online', 'Онлайн')
+        ('Online', 'Онлайн'),
     }
+
     status = models.CharField(
         'статус',
         max_length=20,
         choices=ORDER_STATUS,
         default='Raw',
-        db_index=True
+        db_index=True,
     )
     products = models.ManyToManyField(
         Product,
-        through='OrderItem'
-        )
+        through='OrderItem',
+        verbose_name='товары',
+    )
     firstname = models.CharField(
-        blank=False,
-        max_length=50
-        )
+        'имя',
+        max_length=50,
+    )
     lastname = models.CharField(
-        blank=False,
-        max_length=50
-        )
+        'фамилия',
+        max_length=50,
+    )
     phonenumber = PhoneNumberField(
-        blank=False,
+        'номер телефона',
         db_index=True,
-        )
+    )
     address = models.CharField(
-        blank=False,
+        'адрес доставки',
         max_length=255,
-        db_index=True
-        )
-    
-    registered_at = models.DateTimeField(db_index=True, default=timezone.now, verbose_name='Registered at')
-    called_at = models.DateTimeField(db_index=True, null=True, blank=True, verbose_name='Called at')
-    delivered_at = models.DateTimeField(db_index=True, null=True, blank=True, verbose_name='Delivered at')
-
+        db_index=True,
+    )
+    registered_at = models.DateTimeField(
+        'дата регистрации',
+        db_index=True,
+        default=timezone.now,
+    )
+    called_at = models.DateTimeField(
+        'дата звонка',
+        db_index=True,
+        null=True,
+        blank=True,
+    )
+    delivered_at = models.DateTimeField(
+        'дата доставки',
+        db_index=True,
+        null=True,
+        blank=True,
+    )
     payment_method = models.CharField(
-        'Способ оплаты',
+        'способ оплаты',
         max_length=20,
         choices=PAY_METHODS,
-        db_index=True
+        db_index=True,
     )
-    comment = models.TextField(blank=True, verbose_name='Комментарий')
-
+    comment = models.TextField(
+        'комментарий',
+        blank=True,
+    )
     restaurant = models.ForeignKey(
         Restaurant,
         related_name='orders',
@@ -201,26 +218,40 @@ class Order(models.Model):
         blank=True,
     )
 
-
-
-    class Meta():
+    class Meta:
         verbose_name = 'заказ'
         verbose_name_plural = 'заказы'
 
     def __str__(self):
-        return self.address
+        return f'Заказ №{self.id} ({self.address})'
+
     
 class OrderItem(models.Model):
-    order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)
-    product = models.ForeignKey(Product, related_name='items', on_delete=models.CASCADE)
-    quantity = models.PositiveIntegerField()
+    order = models.ForeignKey(
+        Order,
+        related_name='items',
+        on_delete=models.CASCADE,
+        verbose_name='заказ',
+    )
+    product = models.ForeignKey(
+        Product,
+        related_name='items',
+        on_delete=models.CASCADE,
+        verbose_name='товар',
+    )
+    quantity = models.PositiveIntegerField(
+        'количество',
+    )
     price = models.DecimalField(
-        'цена',
+        'цена за единицу',
         max_digits=8,
         decimal_places=2,
-        validators=[MinValueValidator(0)]
+        validators=[MinValueValidator(0)],
     )
 
     class Meta:
         verbose_name = 'позиция заказа'
         verbose_name_plural = 'позиции заказа'
+
+    def __str__(self):
+        return f'{self.product.name} × {self.quantity}'
