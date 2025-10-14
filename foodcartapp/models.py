@@ -193,12 +193,14 @@ class Order(models.Model):
     comment = models.TextField(blank=True, verbose_name='Комментарий')
 
     restaurant = models.ForeignKey(
-    Restaurant,
-    related_name='orders',
-    verbose_name='ресторан',
-    on_delete=models.PROTECT,
-    null=True, blank=True
+        Restaurant,
+        related_name='orders',
+        verbose_name='ресторан',
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
     )
+
 
 
     class Meta():
