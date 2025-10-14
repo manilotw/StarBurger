@@ -125,14 +125,20 @@ def view_orders(request):
     ).order_by('-status')
     for order in orders:
         order.restaurants = RestaurantMenuItem.available.get_restaurants_by_order(order.id)
+        order_coords = fetch_coordinates(api_key, order.address)
+
+        if not order_coords:
+            order.address_not_found = True
+            continue
+
+        order.address_not_found = False
         for restaurant in order.restaurants:
             restaurant_coords = fetch_coordinates(api_key, restaurant.address)
-            order_coords = fetch_coordinates(api_key, order.address)
-            if order_coords:
+            if restaurant_coords:
                 restaurant.distance = round(distance.distance(restaurant_coords[::-1], order_coords[::-1]).km, 2)
             else:
                 restaurant.distance = "Ошибка определения координат"
-                
-        order.restaurants = sorted(order.restaurants, key=lambda r: r.distance)
+
+        order.restaurants = sorted(order.restaurants, key=lambda r: r.distance if isinstance(r.distance, (int, float)) else float('inf'))
 
     return render(request, 'order_items.html', {'order_items': orders})

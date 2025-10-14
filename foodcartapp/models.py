@@ -110,7 +110,7 @@ class RestaurantMenuItemQuerySet(models.QuerySet):
         return set(restaurants)
 
 class RestaurantMenuItem(models.Model):
-    objects = RestaurantMenuItemQuerySet.as_manager()
+    available = RestaurantMenuItemQuerySet.as_manager()
     restaurant = models.ForeignKey(
         Restaurant,
         related_name='menu_items',

@@ -37,13 +37,20 @@
         <td>
           <details>
             {% if item.restaurant %}
-            <summary>Готовит</summary>
+              <summary>Готовит:</summary>
               {{ item.restaurant.name }}<br>
-            {% else %}
+
+            {% elif item.address_not_found %}
+              <summary>Адрес не найден</summary>
+
+            {% elif item.restaurants %}
               <summary>Могут приготовить:</summary>
               {% for restaurant in item.restaurants %}
                 {{ restaurant.name }} - {{ restaurant.distance }} км<br>
               {% endfor %}
+
+            {% else %}
+              <summary>Адрес не найден</summary>
             {% endif %}
           </details>
         </td>
