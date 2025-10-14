@@ -188,10 +188,8 @@ class Order(models.Model):
         'Способ оплаты',
         max_length=20,
         choices=PAY_METHODS,
-        default='Cash',
         db_index=True
     )
-
     comment = models.TextField(blank=True, verbose_name='Комментарий')
 
     restaurant = models.ForeignKey(
