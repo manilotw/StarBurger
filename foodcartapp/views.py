@@ -1,14 +1,13 @@
 from django.http import JsonResponse
 from django.templatetags.static import static
-import json
+
 
 from .models import Product, Order, OrderItem
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from django.core.exceptions import ValidationError as VE
-from phonenumber_field.validators import validate_international_phonenumber
-from rest_framework.serializers import Serializer, ModelSerializer, CharField, ValidationError, ListField
+
 from django.db import transaction
+from .serializers import OrderSerializer, OrderItemSerializer
 
 def banners_list_api(request):
     # FIXME move data to db?
@@ -61,25 +60,6 @@ def product_list_api(request):
         'indent': 4,
     })
 
-class OrderItemSerializer(ModelSerializer):
-    class Meta:
-        model = OrderItem
-        fields = ['product', 'quantity']
-
-class OrderSerializer(ModelSerializer):
-    products = OrderItemSerializer(many=True, allow_empty=False, write_only=True)
-    class Meta:
-        model = Order
-        fields = ['products', 'firstname', 'lastname', 'phonenumber', 'address']
-        
-    
-    def validate_phonenumber(self, value):
-        try:
-            validate_international_phonenumber(value)
-        except ValidationError:
-            raise ValidationError("Invalid phone number format")
-        return value
-    
         
 @transaction.atomic
 @api_view(['POST'])
