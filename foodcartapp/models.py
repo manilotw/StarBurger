@@ -172,6 +172,7 @@ class Order(models.Model):
         )
     phonenumber = PhoneNumberField(
         blank=False,
+        db_index=True,
         )
     address = models.CharField(
         blank=False,
@@ -179,9 +180,9 @@ class Order(models.Model):
         db_index=True
         )
     
-    registered_at = models.DateTimeField(default=timezone.now, verbose_name='Registered at')
-    called_at = models.DateTimeField(null=True, blank=True, verbose_name='Called at')
-    delivered_at = models.DateTimeField(null=True, blank=True, verbose_name='Delivered at')
+    registered_at = models.DateTimeField(db_index=True, default=timezone.now, verbose_name='Registered at')
+    called_at = models.DateTimeField(db_index=True, null=True, blank=True, verbose_name='Called at')
+    delivered_at = models.DateTimeField(db_index=True, null=True, blank=True, verbose_name='Delivered at')
 
     payment_method = models.CharField(
         'Способ оплаты',
