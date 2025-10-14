@@ -10,12 +10,16 @@ class Place(models.Model):
     lat = models.DecimalField(
         verbose_name='Широта',
         max_digits=10,
-        decimal_places=2
+        decimal_places=2,
+        blank=True,
+        null=True,
         )
     lon = models.DecimalField(
         verbose_name='Долгота',
         max_digits=10,
-        decimal_places=2
+        decimal_places=2,
+        blank=True,
+        null=True,
         )
     
     request_date = models.DateField(
