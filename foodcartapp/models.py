@@ -3,6 +3,8 @@ from django.core.validators import MinValueValidator
 from phonenumber_field.modelfields import PhoneNumberField
 from django.utils import timezone
 
+from collections import defaultdict
+
 class Restaurant(models.Model):
     name = models.CharField(
         'название',
@@ -110,7 +112,7 @@ class RestaurantMenuItemQuerySet(models.QuerySet):
         return set(restaurants)
 
 class RestaurantMenuItem(models.Model):
-    available = RestaurantMenuItemQuerySet.as_manager()
+    objects = RestaurantMenuItemQuerySet.as_manager()
     restaurant = models.ForeignKey(
         Restaurant,
         related_name='menu_items',
@@ -138,6 +140,27 @@ class RestaurantMenuItem(models.Model):
 
     def __str__(self):
         return f"{self.restaurant.name} - {self.product.name}"
+
+class OrderQuerySet(models.QuerySet):
+    def with_available_restaurants(self):
+
+        from foodcartapp.models import RestaurantMenuItem
+
+        restaurant_menu_items = RestaurantMenuItem.objects.select_related('restaurant', 'product')
+
+        menu_by_restaurant = defaultdict(set)
+        for item in restaurant_menu_items:
+            menu_by_restaurant[item.restaurant].add(item.product)
+
+        for order in self:
+            order_products = set(item.product for item in order.items.all())
+            available_restaurants = [
+                restaurant for restaurant, products in menu_by_restaurant.items()
+                if order_products.issubset(products)
+            ]
+            order.restaurants = available_restaurants
+
+        return self
 
 class Order(models.Model):
     ORDER_STATUS = {
@@ -225,6 +248,7 @@ class Order(models.Model):
     def __str__(self):
         return f'Заказ №{self.id} ({self.address})'
 
+    objects = OrderQuerySet.as_manager()
     
 class OrderItem(models.Model):
     order = models.ForeignKey(

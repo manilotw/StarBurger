@@ -12,7 +12,7 @@ from django.contrib.auth import views as auth_views
 from environs import Env
 import requests
 
-from foodcartapp.models import Product, Restaurant, Order, OrderItem, RestaurantMenuItem
+from foodcartapp.models import Product, Restaurant, Order
 from star_burger.settings import api_key
 
 def fetch_coordinates(apikey, address):
@@ -120,11 +120,10 @@ def view_restaurants(request):
 
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_orders(request):
-    orders = Order.objects.annotate(
-        total_price=Sum(F('items__product__price') * F('items__quantity'))
-    ).order_by('-status')
+    
+    orders = Order.objects.prefetch_related('items__product').with_available_restaurants()
+
     for order in orders:
-        order.restaurants = RestaurantMenuItem.available.get_restaurants_by_order(order.id)
         order_coords = fetch_coordinates(api_key, order.address)
 
         if not order_coords:
@@ -132,6 +131,7 @@ def view_orders(request):
             continue
 
         order.address_not_found = False
+
         for restaurant in order.restaurants:
             restaurant_coords = fetch_coordinates(api_key, restaurant.address)
             if restaurant_coords:
@@ -139,6 +139,9 @@ def view_orders(request):
             else:
                 restaurant.distance = "Ошибка определения координат"
 
-        order.restaurants = sorted(order.restaurants, key=lambda r: r.distance if isinstance(r.distance, (int, float)) else float('inf'))
+        order.restaurants = sorted(
+            order.restaurants,
+            key=lambda r: r.distance if isinstance(r.distance, (int, float)) else float('inf')
+        )
 
     return render(request, 'order_items.html', {'order_items': orders})
