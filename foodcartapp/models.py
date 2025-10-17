@@ -14,6 +14,7 @@ class Restaurant(models.Model):
         'адрес',
         max_length=100,
         blank=True,
+        unique=True
     )
     contact_phone = models.CharField(
         'контактный телефон',
