@@ -121,7 +121,12 @@ def view_restaurants(request):
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_orders(request):
     
-    orders = Order.objects.prefetch_related('items__product').with_available_restaurants()
+    orders = (
+    Order.objects
+    .exclude(status='Done')
+    .prefetch_related('items__product')
+    .with_available_restaurants()
+)
 
     for order in orders:
         order_coords = fetch_coordinates(yandex_api_key, order.address)
