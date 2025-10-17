@@ -126,6 +126,7 @@ def view_orders(request):
     .exclude(status='Done')
     .prefetch_related('items__product')
     .with_available_restaurants()
+    .order_by('status')
 )
 
     for order in orders:
