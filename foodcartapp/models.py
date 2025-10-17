@@ -144,8 +144,6 @@ class RestaurantMenuItem(models.Model):
 class OrderQuerySet(models.QuerySet):
     def with_available_restaurants(self):
 
-        from foodcartapp.models import RestaurantMenuItem
-
         restaurant_menu_items = RestaurantMenuItem.objects.select_related('restaurant', 'product')
 
         menu_by_restaurant = defaultdict(set)
