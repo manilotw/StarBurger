@@ -241,6 +241,8 @@ class Order(models.Model):
         blank=True,
     )
 
+    objects = OrderQuerySet.as_manager()
+
     class Meta:
         verbose_name = 'заказ'
         verbose_name_plural = 'заказы'
@@ -248,7 +250,7 @@ class Order(models.Model):
     def __str__(self):
         return f'Заказ №{self.id} ({self.address})'
 
-    objects = OrderQuerySet.as_manager()
+    
     
 class OrderItem(models.Model):
     order = models.ForeignKey(
