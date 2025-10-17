@@ -13,7 +13,7 @@ from environs import Env
 import requests
 
 from foodcartapp.models import Product, Restaurant, Order
-from star_burger.settings import api_key
+from star_burger.settings import yandex_api_key
 
 def fetch_coordinates(apikey, address):
     try:
@@ -124,7 +124,7 @@ def view_orders(request):
     orders = Order.objects.prefetch_related('items__product').with_available_restaurants()
 
     for order in orders:
-        order_coords = fetch_coordinates(api_key, order.address)
+        order_coords = fetch_coordinates(yandex_api_key, order.address)
 
         if not order_coords:
             order.address_not_found = True
@@ -133,7 +133,7 @@ def view_orders(request):
         order.address_not_found = False
 
         for restaurant in order.restaurants:
-            restaurant_coords = fetch_coordinates(api_key, restaurant.address)
+            restaurant_coords = fetch_coordinates(yandex_api_key, restaurant.address)
             if restaurant_coords:
                 restaurant.distance = round(distance.distance(restaurant_coords[::-1], order_coords[::-1]).km, 2)
             else:
