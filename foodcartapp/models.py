@@ -96,24 +96,8 @@ class Product(models.Model):
     def __str__(self):
         return self.name
 
-class RestaurantMenuItemQuerySet(models.QuerySet):
-    def get_restaurants_by_order(self, order_id):
-        order = Order.objects.select_related('restaurant').get(pk=order_id)
-        if order.restaurant:
-            return {order.restaurant}
-
-        product_ids = order.items.all().values_list('product_id', flat=True)
-        restaurants = Restaurant.objects.filter(
-            menu_items__product_id__in=product_ids,
-            menu_items__availability=True
-        ).distinct()
-
-        restaurants = restaurants.filter(menu_items__product_id__in=product_ids)
-
-        return set(restaurants)
-
 class RestaurantMenuItem(models.Model):
-    objects = RestaurantMenuItemQuerySet.as_manager()
+    
     restaurant = models.ForeignKey(
         Restaurant,
         related_name='menu_items',

@@ -99,13 +99,12 @@ def view_restaurants(request):
 def view_orders(request):
     
     orders = (
-    Order.objects
-    .exclude(status='Done')
-    .prefetch_related('items__product')
-    .with_available_restaurants()
-    .order_by('status')
-)
-
+        Order.objects
+        .exclude(status='Done')
+        .prefetch_related('items__product')
+        .order_by('status')
+        .with_available_restaurants()
+    )
     for order in orders:
         order_coords = fetch_coordinates(yandex_api_key, order.address)
 
