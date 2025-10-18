@@ -14,7 +14,7 @@ import requests
 
 from foodcartapp.models import Product, Restaurant, Order
 from star_burger.settings import yandex_api_key
-from place.utils import fetch_coordinates
+from place.utils import fetch_coordinates, get_all_addresses_with_coords
 
 class Login(forms.Form):
     username = forms.CharField(
@@ -97,7 +97,8 @@ def view_restaurants(request):
 
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_orders(request):
-    
+    address_to_coords = get_all_addresses_with_coords()
+
     orders = (
         Order.objects
         .exclude(status='Done')
@@ -105,8 +106,9 @@ def view_orders(request):
         .order_by('status')
         .with_available_restaurants()
     )
+
     for order in orders:
-        order_coords = fetch_coordinates(yandex_api_key, order.address)
+        order_coords = address_to_coords.get(order.address)
 
         if not order_coords:
             order.address_not_found = True
@@ -115,9 +117,12 @@ def view_orders(request):
         order.address_not_found = False
 
         for restaurant in order.restaurants:
-            restaurant_coords = fetch_coordinates(yandex_api_key, restaurant.address)
+            restaurant_coords = address_to_coords.get(restaurant.address)
+
             if restaurant_coords:
-                restaurant.distance = round(distance.distance(restaurant_coords[::-1], order_coords[::-1]).km, 2)
+                restaurant.distance = round(
+                    distance.distance(restaurant_coords[::-1], order_coords[::-1]).km, 2
+                )
             else:
                 restaurant.distance = "Ошибка определения координат"
 
