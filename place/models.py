@@ -5,6 +5,7 @@ class Place(models.Model):
     address_place = models.CharField(
         verbose_name='адрес',
         max_length=50,
+        unique=True,
     )
 
     lat = models.DecimalField(
