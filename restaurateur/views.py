@@ -116,19 +116,31 @@ def view_orders(request):
 
         order.address_not_found = False
 
+        restaurants_with_distance = []
+
         for restaurant in order.restaurants:
             restaurant_coords = address_to_coords.get(restaurant.address)
 
             if restaurant_coords:
-                restaurant.distance = round(
-                    distance.distance(restaurant_coords[::-1], order_coords[::-1]).km, 2
-                )
+                try:
+                    
+                    rest_point = (float(restaurant_coords[1]), float(restaurant_coords[0]))
+                    order_point = (float(order_coords[1]), float(order_coords[0]))
+                    dist_km = round(distance.distance(rest_point, order_point).km, 2)
+                except Exception:
+                    dist_km = "Ошибка определения координат"
             else:
-                restaurant.distance = "Ошибка определения координат"
+                dist_km = "Ошибка определения координат"
+
+            restaurants_with_distance.append({
+                'name': restaurant.name,
+                'address': restaurant.address,
+                'distance': dist_km,
+            })
 
         order.restaurants = sorted(
-            order.restaurants,
-            key=lambda r: r.distance if isinstance(r.distance, (int, float)) else float('inf')
+            restaurants_with_distance,
+            key=lambda r: (r['distance'] if isinstance(r['distance'], (int, float)) else float('inf'), r['name'])
         )
 
     return render(request, 'order_items.html', {'order_items': orders})
