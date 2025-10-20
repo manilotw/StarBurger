@@ -42,9 +42,13 @@ def get_all_addresses_with_coords():
     missing_addresses = [addr for addr in all_addresses if addr not in address_to_coords]
 
     for address in missing_addresses:
-        lon, lat = fetch_coordinates(yandex_api_key, address)
-        if lon and lat:
-            Place.objects.create(address_place=address, lon=lon, lat=lat)
-            address_to_coords[address] = (lon, lat)
+        coords = fetch_coordinates(yandex_api_key, address)
+        if coords is None:
+            print(f"Адрес не найден: {address}")
+            continue
+
+        lon, lat = coords
+        Place.objects.create(address_place=address, lon=lon, lat=lat)
+        address_to_coords[address] = (lon, lat)
 
     return address_to_coords
