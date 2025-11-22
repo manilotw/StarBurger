@@ -15,7 +15,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 SECRET_KEY = env('SECRET_KEY')
 DEBUG = env.bool('DEBUG', True)
 
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', ['127.0.0.1', 'localhost'])
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', ['127.0.0.1','178.128.111.154', 'localhost'])
 
 INSTALLED_APPS = [
     'foodcartapp.apps.FoodcartappConfig',
@@ -85,9 +85,14 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 
 DATABASES = {
-    'default': dj_database_url.config(
-        default='sqlite:////{0}'.format(os.path.join(BASE_DIR, 'db.sqlite3'))
-    )
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': env.str('DB_NAME', 'starburger'),
+        'USER': env.str('DB_USER', 'starburger_user'),
+        'PASSWORD': env.str('DB_PASSWORD', 'password'),
+        'HOST': env.str('DB_HOST', 'localhost'),
+        'PORT': env.str('DB_PORT', '5432'),
+    }
 }
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -129,9 +134,12 @@ STATICFILES_DIRS = [
 
 yandex_api_key = env("YANDEX_GEOCODE_API_KEY")
 
+
 ROLLBAR = {
     'access_token': env('ROLLBAR_ACCESS_TOKEN', default=''),
     'environment': 'development' if DEBUG else 'production',
     'code_version': '1.0',
     'root': BASE_DIR,
 }
+
+rollbar.init(**ROLLBAR)
