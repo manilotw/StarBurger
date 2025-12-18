@@ -15,7 +15,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 SECRET_KEY = env('SECRET_KEY')
 DEBUG = env.bool('DEBUG', True)
 
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', ['127.0.0.1','178.128.111.154', 'localhost'])
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', ['my123321.store', 'www.my123321.store', '127.0.0.1','178.128.111.154', 'localhost'])
 
 INSTALLED_APPS = [
     'foodcartapp.apps.FoodcartappConfig',
@@ -137,7 +137,7 @@ yandex_api_key = env("YANDEX_GEOCODE_API_KEY")
 
 ROLLBAR = {
     'access_token': env('ROLLBAR_ACCESS_TOKEN', default=''),
-    'environment': 'development' if DEBUG else 'production',
+    'environment': env('ROLLBAR_ENVIRONMENT', default='development'),
     'code_version': '1.0',
     'root': BASE_DIR,
 }
