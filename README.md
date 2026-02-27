@@ -15,9 +15,102 @@
 
 ## Как запустить dev-версию сайта
 
-Для запуска сайта нужно запустить **одновременно** бэкенд и фронтенд, в двух терминалах.
+### С использованием Docker Compose (Рекомендуется)
 
-### Как собрать бэкенд
+Это самый быстрый и надежный способ развернуть проект на локальной машине.
+
+**Требования:**
+- [Docker](https://www.docker.com/products/docker-desktop) (версия 20.10+)
+- [Docker Compose](https://docs.docker.com/compose/install/) (версия 1.29+)
+
+**Установка и запуск:**
+
+1. Клонируйте репозиторий:
+```bash
+git clone https://github.com/devmanorg/star-burger.git
+cd star-burger
+```
+
+2. Подготовьте окружение:
+```bash
+cp .env.example .env
+```
+
+Отредактируйте файл `.env` и установите нужные значения (по крайней мере `SECRET_KEY` и `YANDEX_GEOCODE_API_KEY`):
+
+```bash
+SECRET_KEY=your-secret-key-here
+YANDEX_GEOCODE_API_KEY=your-yandex-api-key
+DEBUG=True
+DB_NAME=starburger
+DB_USER=starburger
+DB_PASSWORD=starburger
+```
+
+3. Запустите приложение:
+```bash
+docker-compose up -d
+```
+
+Или используйте быстрый скрипт развертывания:
+```bash
+chmod +x deploy-local.sh
+./deploy-local.sh
+```
+
+4. Дождитесь инициализации БД (первый запуск может занять 30-60 секунд):
+```bash
+docker-compose logs -f backend
+```
+
+5. Откройте сайт в браузере:
+- **Фронтенд:** http://localhost:8000
+- **Админка:** http://localhost:8000/admin (пользователь: admin, пароль: admin)
+
+**Полезные команды:**
+
+```bash
+# Просмотр логов
+docker-compose logs -f backend      # Логи бэкенда
+docker-compose logs -f frontend     # Логи фронтенда
+docker-compose logs -f db           # Логи БД
+
+# Выполнение команд Django
+docker-compose exec backend python manage.py createsuperuser
+docker-compose exec backend python manage.py shell
+
+# Остановка приложения
+docker-compose down
+
+# Остановка и удаление данных
+docker-compose down -v
+
+# Пересборка образов (если изменились requirements)
+docker-compose build --no-cache
+
+# Просмотр статуса контейнеров
+docker-compose ps
+```
+
+**Структура контейнеров:**
+
+- **backend** (Django) — основное приложение, port 8000
+- **frontend** (Node.js) — сборка фронтенда в режиме watch
+- **db** (PostgreSQL) — база данных, port 5432
+
+**Хранение данных:**
+
+- **Медиа файлы:** хранятся в Docker volume `media_data`
+- **База данных:** хранится в Docker volume `postgres_data`
+- **Статические файлы:** хранятся в Docker volume `static_data`
+
+Эти тома сохраняют данные даже после остановки и удаления контейнеров. Для полной очистки используйте `docker-compose down -v`.
+
+---
+
+### Локально без Docker (Для опытных разработчиков)
+
+#### Как собрать бэкенд
 
 Скачайте код:
 ```sh
@@ -54,12 +147,24 @@ python -m venv venv
 pip install -r requirements.txt
 ```
 
-Определите переменную окружения `SECRET_KEY`. Создать файл `.env` в каталоге `star_burger/` и положите туда такой код:
+Определите переменную окружения `SECRET_KEY`. Создать файл `.env` в каталоге проекта и положите туда такой код:
 ```sh
 SECRET_KEY=django-insecure-0if40nf4nf93n4
+YANDEX_GEOCODE_API_KEY=ваш-токен-яндекса
 ```
 
-Создайте файл базы данных SQLite и отмигрируйте её следующей командой:
+Если используете PostgreSQL, обновите переменные БД в `.env`:
+```sh
+DEBUG=False
+DB_ENGINE=django.db.backends.postgresql
+DB_NAME=starburger
+DB_USER=starburger_user
+DB_PASSWORD=your_password
+DB_HOST=localhost
+DB_PORT=5432
+```
+
+Создайте файл базы данных и отмигрируйте её следующей командой:
 
 ```sh
 python manage.py migrate
@@ -73,7 +178,7 @@ python manage.py runserver
 
 Откройте сайт в браузере по адресу [http://127.0.0.1:8000/](http://127.0.0.1:8000/). Если вы увидели пустую белую страницу, то не пугайтесь, выдохните. Просто фронтенд пока ещё не собран. Переходите к следующему разделу README.
 
-### Собрать фронтенд
+#### Собрать фронтенд
 
 **Откройте новый терминал**. Для работы сайта в dev-режиме необходима одновременная работа сразу двух программ `runserver` и `parcel`. Каждая требует себе отдельного терминала. Чтобы не выключать `runserver` откройте для фронтенда новый терминал и все нижеследующие инструкции выполняйте там.
 
@@ -133,21 +238,177 @@ Parcel будет следить за файлами в каталоге `bundle
 
 **Сбросьте кэш браузера <kbd>Ctrl-F5</kbd>.** Браузер при любой возможности старается кэшировать файлы статики: CSS, картинки и js-код. Порой это приводит к странному поведению сайта, когда код уже давно изменился, но браузер этого не замечает и продолжает использовать старую закэшированную версию. В норме Parcel решает эту проблему самостоятельно. Он следит за пересборкой фронтенда и предупреждает JS-код в браузере о необходимости подтянуть свежий код. Но если вдруг что-то у вас идёт не так, то начните ремонт со сброса браузерного кэша, жмите <kbd>Ctrl-F5</kbd>.
 
+---
 
-## Как запустить prod-версию сайта
+## Как развернуть на сервер (Production Deployment)
 
-Собрать фронтенд:
+### Требования
 
-```sh
-./node_modules/.bin/parcel build bundles-src/index.js --dist-dir bundles --public-url="./"
+- VPS/Dedicated Server с 2GB+ RAM
+- Docker и Docker Compose установлены на сервере
+- SSH доступ к серверу
+- Доменное имя (опционально, для SSL)
+
+### Подготовка сервера
+
+1. Установите Docker и Docker Compose на сервер:
+
+```bash
+# SSH на сервер
+ssh root@your.server.com
+
+# Обновить систему
+apt-get update && apt-get upgrade -y
+
+# Установить Docker
+curl -fsSL https://get.docker.com -o get-docker.sh
+sh get-docker.sh
+
+# Установить Docker Compose
+curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+chmod +x /usr/local/bin/docker-compose
 ```
 
-Настроить бэкенд: создать файл `.env` в каталоге `star_burger/` со следующими настройками:
+2. Создайте директорию для проекта и клонируйте репозиторий:
 
-- `DEBUG` — дебаг-режим. Поставьте `False`.
-- `SECRET_KEY` — секретный ключ проекта. Он отвечает за шифрование на сайте. Например, им зашифрованы все пароли на вашем сайте.
-- `ALLOWED_HOSTS` — [см. документацию Django](https://docs.djangoproject.com/en/3.1/ref/settings/#allowed-hosts)
-- `YANDEX_GEOCODE_API_KEY` - Токен api Яндекса
+```bash
+mkdir -p /var/www/star-burger
+cd /var/www/star-burger
+git clone https://github.com/your-username/star-burger.git .
+```
+
+3. Подготовьте конфигурацию:
+
+```bash
+# Скопируйте пример конфига
+cp .env.prod.example .env
+
+# Отредактируйте с реальными значениями
+nano .env
+```
+
+Важные переменные для production:
+```bash
+SECRET_KEY=change-me-to-real-key
+DEBUG=False
+ALLOWED_HOSTS=yourdomain.com,www.yourdomain.com
+DB_NAME=starburger_prod
+DB_USER=starburger_prod
+DB_PASSWORD=very-secure-password
+YANDEX_GEOCODE_API_KEY=your-api-key
+ROLLBAR_ACCESS_TOKEN=optional
+```
+
+### Развертывание с помощью скрипта (Рекомендуется)
+
+На локальной машине в каталоге проекта используйте скрипт деплоя:
+
+```bash
+chmod +x deploy.sh
+
+# Синтаксис: ./deploy.sh <server_host> <server_user>
+./deploy.sh your.server.com root
+```
+
+Скрипт автоматически:
+- Обновит код с GitHub
+- Пересоберет Docker образы
+- Выполнит миграции БД
+- Собере статические файлы
+- Перезапустит контейнеры
+
+### Развертывание вручную
+
+Если скрипт не подходит, выполните на сервере:
+
+```bash
+cd /var/www/star-burger
+
+# Обновить код
+git pull origin main
+
+# Пересобрать и запустить
+docker-compose -f docker-compose.prod.yml down
+docker-compose -f docker-compose.prod.yml build --no-cache
+docker-compose -f docker-compose.prod.yml up -d
+
+# Выполнить миграции
+sleep 5
+docker-compose -f docker-compose.prod.yml exec -T backend python manage.py migrate --noinput
+
+# Собрать статические файлы
+docker-compose -f docker-compose.prod.yml exec -T backend python manage.py collectstatic --noinput
+```
+
+### Конфигурация SSL (HTTPS)
+
+Если используется Let's Encrypt:
+
+```bash
+# Установить certbot на сервер
+apt-get install certbot python3-certbot-nginx
+
+# Создать сертификат
+certbot certonly --standalone -d yourdomain.com -d www.yourdomain.com
+
+# В nginx.conf путь к сертификатам:
+# ssl_certificate /etc/letsencrypt/live/yourdomain.com/fullchain.pem;
+# ssl_certificate_key /etc/letsencrypt/live/yourdomain.com/privkey.pem;
+
+# Перезагрузить nginx
+docker-compose -f docker-compose.prod.yml restart nginx
+```
+
+### Мониторинг и поддержка
+
+Просмотр логов:
+```bash
+# Все ошибки приложения
+docker-compose -f docker-compose.prod.yml logs -f backend
+
+# Nginx логи
+docker-compose -f docker-compose.prod.yml logs -f nginx
+
+# Все логи
+docker-compose -f docker-compose.prod.yml logs -f
+```
+
+Проверка статуса приложения:
+```bash
+# Статус контейнеров
+docker-compose -f docker-compose.prod.yml ps
+
+# Health check
+curl http://localhost/health
+```
+
+Очистка и переустановка:
+```bash
+# Удалить все контейнеры и том БД
+docker-compose -f docker-compose.prod.yml down -v
+
+# Переустановить с нуля
+docker-compose -f docker-compose.prod.yml up -d --build
+docker-compose -f docker-compose.prod.yml exec -T backend python manage.py migrate
+```
+
+---
+
+## Структура Docker файлов
+
+```
+├── Dockerfile.backend        # Build для Django приложения
+├── Dockerfile.frontend       # Build для Frontend (Node.js)
+├── docker-compose.yml        # Dev конфигурация
+├── docker-compose.prod.yml   # Production конфигурация
+├── docker-entrypoint.sh      # Скрипт инициализации Django
+├── .dockerignore             # Файлы исключенные из Docker образа
+├── nginx.conf                # Nginx конфигурация для Production
+├── deploy.sh                 # Скрипт автоматического деплоя на сервер
+└── deploy-local.sh           # Скрипт быстрого локального деплоя
+```
+
+---
 
 ## 🚀 Быстрый деплой на сервер
 

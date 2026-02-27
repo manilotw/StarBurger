@@ -1,0 +1,36 @@
+# docker-compose.override.yml
+# This file is automatically loaded by docker-compose after docker-compose.yml
+# Use this to override settings for local development without modifying docker-compose.yml
+# 
+# Rename this file to docker-compose.override.yml to use it
+
+version: '3.8'
+
+services:
+  # Пример: Debug отключенные services
+  # database:
+  #   ports:
+  #     - "5432:5432"  # Expose postgres port for local tools
+  
+  # Пример: Изменить port backend
+  # backend:
+  #   ports:
+  #     - "8001:8000"  # Use different port if 8000 is already taken
+  
+  # Пример: Потому что логирование более подробным
+  # backend:
+  #   environment:
+  #     DEBUG: "True"
+  #     LOG_LEVEL: "DEBUG"
+  
+  # Пример: Использовать собственный volume для кода
+  # backend:
+  #   volumes:
+  #     - ./:/app
+  #     - /app/__pycache__  # Exclude pycache
+  #     - /app/node_modules  # Exclude node_modules
+  
+  # Пример: Изменить количество workers в frontend
+  # frontend:
+  #   environment:
+  #     PARCEL_WORKERS: "4"

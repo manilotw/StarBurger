@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: starburger_db
+    env_file: .env
+    environment:
+      POSTGRES_DB: ${DB_NAME:-starburger}
+      POSTGRES_USER: ${DB_USER:-starburger}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-starburger}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - starburger_network
+
+  # Django Backend
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: starburger_backend
+    env_file: .env
+    environment:
+      DEBUG: "True"
+      DB_HOST: db
+      DB_PORT: 5432
+      ALLOWED_HOSTS: "localhost,127.0.0.1,backend"
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      - .:/app
+      - media_data:/app/media
+      - static_data:/app/staticfiles
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - starburger_network
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py collectstatic --noinput &&
+             python manage.py runserver 0.0.0.0:8000"
+
+  # Node.js Frontend (для dev режима - watch mode)
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: starburger_frontend
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - bundles_data:/app/bundles
+    ports:
+      - "1234:1234"
+    networks:
+      - starburger_network
+    environment:
+      NODE_ENV: development
+    command: npm run dev
+
+volumes:
+  postgres_data:
+    driver: local
+  media_data:
+    driver: local
+  static_data:
+    driver: local
+  bundles_data:
+    driver: local
+
+networks:
+  starburger_network:
+    driver: bridge

@@ -1,0 +1,52 @@
+# Multi-stage build для оптимизированного backend образа
+FROM python:3.11-slim as base
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+WORKDIR /app
+
+# Stage 1: Builder - установка зависимостей
+FROM base as builder
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    postgresql-client-15 \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+RUN pip install --user -r requirements.txt
+
+# Stage 2: Runtime - финальный образ
+FROM base
+
+# Установить только runtime зависимости
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    postgresql-client-15 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Копируем установленные пакеты из builder
+COPY --from=builder /root/.local /root/.local
+
+ENV PATH=/root/.local/bin:$PATH
+
+WORKDIR /app
+
+COPY . .
+
+# Создать необходимые директории
+RUN mkdir -p /app/staticfiles /app/media /app/logs
+
+# Скопировать entrypoint скрипт
+COPY docker-entrypoint.sh /app/
+RUN chmod +x /app/docker-entrypoint.sh
+
+# Создать переменные окружения для сборки статики
+RUN python manage.py collectstatic --noinput || true
+
+EXPOSE 8000
+
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "3", "--timeout", "60", "star_burger.wsgi:application"]

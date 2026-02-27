@@ -19,7 +19,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.shortcuts import render
 from foodcartapp.views import register_order
-
+from restaurateur import views
 from . import settings
 
 urlpatterns = [
@@ -29,6 +29,7 @@ urlpatterns = [
     path('api/order/', register_order, name='register_order'),
     path('manager/', include('restaurateur.urls'), name='manager_orders'),
     path('api-auth/', include('rest_framework.urls')),
+
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:

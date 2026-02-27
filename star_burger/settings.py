@@ -122,9 +122,21 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+# Allow debug toolbar in Docker
 INTERNAL_IPS = [
-    '127.0.0.1'
+    '127.0.0.1',
+    'localhost',
+    '0.0.0.0',
 ]
+
+# Добавить все IP адреса контейнеров для debug toolbar
+import socket
+try:
+    hostname = socket.gethostname()
+    ip_address = socket.gethostbyname(hostname)
+    INTERNAL_IPS.append(ip_address)
+except Exception:
+    pass
 
 
 STATICFILES_DIRS = [

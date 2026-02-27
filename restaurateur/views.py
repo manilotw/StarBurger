@@ -144,3 +144,6 @@ def view_orders(request):
         )
 
     return render(request, 'order_items.html', {'order_items': orders})
+from django.shortcuts import render
+from django.http import HttpResponse
+

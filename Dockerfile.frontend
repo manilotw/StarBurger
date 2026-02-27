@@ -1,0 +1,30 @@
+# Multi-stage build для Frontend
+FROM node:16.16.0-alpine as builder
+
+WORKDIR /app
+
+# Копируем файлы проекта
+COPY package*.json ./
+
+# Установка зависимостей
+RUN npm ci
+
+# Копируем исходные файлы для сборки
+COPY bundles-src ./bundles-src
+
+# Сборка фронтенда
+RUN npm run build
+
+# Stage 2: Runtime - используем nginx для подачи статики
+FROM node:16.16.0-alpine as runtime
+
+WORKDIR /app
+
+# Копируем собранные файлы из builder
+COPY --from=builder /app/bundles ./bundles
+COPY --from=builder /app/package*.json ./
+
+# Сборка фронтенда в режиме watch (для dev режима)
+EXPOSE 1234
+
+CMD ["npm", "run", "dev"]

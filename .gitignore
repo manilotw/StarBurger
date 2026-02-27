@@ -142,3 +142,14 @@ dmypy.json
 cython_debug/
 
 .parcel-cache/
+# Docker related
+.env.prod
+docker-compose.override.yml
+docker-build.log
+
+# SSL certificates (if kept locally)
+ssl/
+*.pem
+*.key
+*.crt
+*.csr
