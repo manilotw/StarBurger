@@ -15,20 +15,22 @@ echo "🐍 Activate virtualenv"
 source "$VENV/bin/activate"
 
 echo "📦 Install Python dependencies"
-pip install --no-cache-dir -r requirements.txt
+pip install --no-cache-dir -r backend/requirements.txt
 
 echo "🧱 Apply Django migrations"
-python manage.py migrate --noinput
+python backend/manage.py migrate --noinput
 
 echo "🎨 Collect Django static"
-python manage.py collectstatic --noinput
+python backend/manage.py collectstatic --noinput
 
-if [ -f package.json ]; then
+if [ -f frontend/package.json ]; then
   echo "📦 Install Node.js dependencies"
+  cd frontend
   npm install
 
   echo "🛠 Build frontend"
   npm run build || echo "⚠️ No build script, skipping"
+  cd "$PROJECT_DIR"
 fi
 
 echo "🔄 Restart Gunicorn & Nginx"

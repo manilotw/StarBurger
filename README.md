@@ -144,7 +144,7 @@ python -m venv venv
 
 Установите зависимости в виртуальное окружение:
 ```sh
-pip install -r requirements.txt
+pip install -r backend/requirements.txt
 ```
 
 Определите переменную окружения `SECRET_KEY`. Создать файл `.env` в каталоге проекта и положите туда такой код:
@@ -167,13 +167,13 @@ DB_PORT=5432
 Создайте файл базы данных и отмигрируйте её следующей командой:
 
 ```sh
-python manage.py migrate
+python backend/manage.py migrate
 ```
 
 Запустите сервер:
 
 ```sh
-python manage.py runserver
+python backend/manage.py runserver
 ```
 
 Откройте сайт в браузере по адресу [http://127.0.0.1:8000/](http://127.0.0.1:8000/). Если вы увидели пустую белую страницу, то не пугайтесь, выдохните. Просто фронтенд пока ещё не собран. Переходите к следующему разделу README.
@@ -203,6 +203,7 @@ npm --version
 
 ```sh
 cd star-burger
+cd frontend
 npm ci --dev
 ```
 

@@ -36,7 +36,10 @@ services:
       ALLOWED_HOSTS: "localhost,127.0.0.1,backend"
       PYTHONUNBUFFERED: "1"
     volumes:
-      - .:/app
+      - ./backend:/app
+      - ./frontend/assets:/app/assets
+      - ./frontend/templates:/app/templates
+      - ./frontend/bundles:/app/bundles
       - media_data:/app/media
       - static_data:/app/staticfiles
     ports:
@@ -46,19 +49,18 @@ services:
         condition: service_healthy
     networks:
       - starburger_network
-    command: >
-      sh -c "python manage.py migrate --noinput &&
-             python manage.py collectstatic --noinput &&
-             python manage.py runserver 0.0.0.0:8000"
+    entrypoint: ["/bin/sh", "-lc"]
+    command:
+      - "python manage.py migrate --noinput && python manage.py collectstatic --noinput && python manage.py runserver 0.0.0.0:8000"
 
   # Node.js Frontend (для dev режима - watch mode)
   frontend:
     build:
-      context: .
-      dockerfile: Dockerfile.frontend
+      context: ./frontend
+      dockerfile: ../Dockerfile.frontend
     container_name: starburger_frontend
     volumes:
-      - .:/app
+      - ./frontend:/app
       - /app/node_modules
       - bundles_data:/app/bundles
     ports:
@@ -67,7 +69,7 @@ services:
       - starburger_network
     environment:
       NODE_ENV: development
-    command: npm run dev
+    command: sh -c "npm ci && npm run dev"
 
 volumes:
   postgres_data:
