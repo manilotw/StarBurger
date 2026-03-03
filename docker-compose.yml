@@ -25,8 +25,8 @@ services:
   # Django Backend
   backend:
     build:
-      context: .
-      dockerfile: Dockerfile.backend
+      context: ./backend
+      dockerfile: ../Dockerfile.backend
     container_name: starburger_backend
     env_file: .env
     environment:
